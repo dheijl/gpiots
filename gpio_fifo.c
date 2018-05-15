@@ -27,8 +27,8 @@ void gpio_fifo_destroy(gpio_fifo_t *f) {
         kfree(f);
     }
 }
-// This reads nbytes bytes from the FIFO
-// The number of bytes read is returned
+// This reads up to n timestamps from the FIFO
+// The number of timestamps actually read is returned
 int gpio_fifo_read(gpio_fifo_t *f, struct timespec *data, int ntimestamps) {
     int i;
     struct timespec *p = data;
@@ -45,9 +45,9 @@ int gpio_fifo_read(gpio_fifo_t *f, struct timespec *data, int ntimestamps) {
     }
     return ntimestamps;
 }
-// This writes up to nbytes bytes to the FIFO
-// If the head runs in to the tail, not all bytes are written
-// The number of bytes written is returned
+// This writes up to n timestamps to the FIFO
+// If the head runs in to the tail, not all timestamps are written
+// The number of timestamps actually written is returned
 int gpio_fifo_write(gpio_fifo_t *f, const struct timespec *data, int ntimestamps) {
     int i;
     const struct timespec *p;
@@ -67,11 +67,12 @@ int gpio_fifo_write(gpio_fifo_t *f, const struct timespec *data, int ntimestamps
     return ntimestamps;
 }
 
-// returns true if the fifo has data available
+// returns true if the FIFO has data available
 bool gpio_fifo_data_available(gpio_fifo_t *f) {
     return(f->tail != f->head);
 }
 
+// clears all entries in the FIFO
 void gpio_fifo_clear(gpio_fifo_t *f) {
     f->tail = f->head = 0;
 }
