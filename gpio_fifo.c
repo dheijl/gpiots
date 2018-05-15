@@ -1,3 +1,7 @@
+/*
+A FIFO buffer for timespec structures
+*/
+
 #include <linux/slab.h>
 #include <linux/time.h>
 #include "gpio_fifo.h"
@@ -19,6 +23,8 @@ gpio_fifo_t *gpio_fifo_create(int size) {
     }
     return f;
 }
+
+// release the allocated memory for the FIFO.
 void gpio_fifo_destroy(gpio_fifo_t *f) {
     if (f->data != NULL) {
         kfree(f->data);
