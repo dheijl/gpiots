@@ -150,10 +150,10 @@ static ssize_t gpio_ts_read(struct file *filp, char *buffer, size_t length, loff
     if (nread > 0) {
         lg = nread * sizeof(struct timespec);
         err = copy_to_user(buffer, kbuffer, lg);
-        kfree(kbuffer);
         if (err != 0)
             return -EFAULT;
     }
+    kfree(kbuffer);
     return nread;
 }
 
