@@ -146,13 +146,13 @@ static ssize_t gpio_ts_read(struct file *filp, char *buffer, size_t length, loff
     spin_lock_irqsave(&devinfo->spinlock, irqmsk);
     nread = gpio_fifo_read(devinfo->fifo, kbuffer, length);
     spin_unlock_irqrestore(&devinfo->spinlock, irqmsk);
-    lg = nread * sizeof(struct timespec);
-    err = copy_to_user(buffer, kbuffer, lg);
-
-    kfree(kbuffer);
-
-    if (err != 0)
-        return -EFAULT;
+    if (nread > 0) {
+        lg = nread * sizeof(struct timespec);
+        err = copy_to_user(buffer, kbuffer, lg);
+        kfree(kbuffer);
+        if (err != 0)
+            return -EFAULT;
+    }
     return nread;
 }
 
