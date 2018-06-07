@@ -14,16 +14,17 @@ else
 
 	CFLAGS := -std=gnu99 -Wall -g 
 
-all: modules 
+all: modules test
 
 modules:
 	${MAKE} -C ${KERNEL_DIR} SUBDIRS=${MODULE_DIR}  modules 
 
 clean:
-	rm -f *.o *.ko *.mod.c .*.o .*.ko .*.mod.c .*.cmd *~
+	rm -f *.o *.ko *.mod.c .*.o .*.ko .*.mod.c .*.cmd *~ test
 	rm -f Module.symvers Module.markers modules.order
 	rm -rf .tmp_versions
 
-test: test.c
-	$(CC) -o test test.c -lm
+test: gpiots_test.c fifo.c
+	$(CC) -o test gpiots_test.c fifo.c -lm
+
 endif
