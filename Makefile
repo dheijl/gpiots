@@ -1,7 +1,7 @@
 ifneq (${KERNELRELEASE},)
 
 	obj-m  := gpiots.o
-    gpiots-y := gpio_stamp.o gpio_fifo.o
+    gpiots-y := gpiots_stamp.o gpiots_fifo.o
 
 else
 
