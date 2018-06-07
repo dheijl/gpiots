@@ -34,7 +34,8 @@ SOFTWARE.
 
 int main(int argc, char **argv) {
 
-    struct timespec ts[4];
+    struct timespec ts;
+    fifo_payload_t lus[] = { { 1, { 0, 0 }, {0, 0 } }, { 2, { 0, 0 }, {0, 0 } } };
     int fd1, fd2, fd3, fd4;
     fd1 = open("/dev/gpiots0", O_RDONLY);
     fd2 = open("/dev/gpiots1", O_RDONLY);
@@ -63,29 +64,36 @@ int main(int argc, char **argv) {
         }
         for (int i = 0; i < 4; ++i) {
             if (fds[i].revents != 0) {
-                ts[i].tv_sec = ts[i].tv_nsec = 0;
-                n = read(files[i], &ts[i], 1);
+                n = read(files[i], &ts, 1);
                 if (n == 1) {
                     //printf("%d  %ld %ld\n", i, ts[i].tv_sec, ts[i].tv_nsec);
                 } else {
                     printf("**************read failed for fd%d\n", i);
                 }
-            } 
-        }
-        if (fds[3].revents != 0) {
-            for (int j = 0; j < 4; j += 2) {
-                long usecs1 = ts[j].tv_sec * 1000000 + (ts[j].tv_nsec / 1000);
-                long usecs2 = ts[j + 1].tv_sec * 1000000 + (ts[j + 1].tv_nsec / 1000);
-                long micros = usecs2 - usecs1;
-                if (micros < 0) {
-                    printf("************interrupts arrived out of order\n");
-                    continue;
+                int tsi = i / 2;
+                if ((i & 1) == 0) {
+                    lus[tsi].ts_start = ts;
+                } else {
+                    lus[tsi].ts_end = ts;
                 }
-                double kmph = (0.00025 * 3600 * 1000 * 1000) / (double)micros;
-                printf("Channel: %d, diff: %ld, kmph: %1.0f\n", j, micros, round(kmph));
-            }
+           } 
         }
-
+        for (int i = 0 ; i < 2; ++i) {
+            if (lus[i].ts_end.tv_sec > 0) {
+                long usecs_start = lus[i].ts_start.tv_sec * 1000000 + (lus[i].ts_start.tv_nsec / 1000);
+                long usecs_end = lus[i].ts_end.tv_sec * 1000000 + (lus[i].ts_end.tv_nsec / 1000);
+                long micros = usecs_end - usecs_start;
+                if (micros > 0) {
+                    double kmph = (0.00025 * 3600 * 1000 * 1000) / (double)micros;
+                    printf("lus: %d, diff: %ld, kmph: %1.0f\n", lus[i].lusid, micros, round(kmph));    
+                } else {
+                    printf("lus %d: ***interrupts arrived out of order\n", lus[i].lusid);               
+                }
+                lus[i].ts_start = (struct timespec){ 0, 0 };
+                lus[i].ts_end = (struct timespec){ 0, 0 };
+            }
+           
+        }
     }
     for (int i = 0; i < 4; ++i) {
         close(files[i]);
