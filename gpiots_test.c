@@ -32,20 +32,28 @@ SOFTWARE.
 
 #include "fifo.h"
 
+#define LUSSEN 2
+#define NGPIOS (LUSSEN * 2)
+
 int main(int argc, char **argv) {
 
     struct timespec ts;
-    fifo_payload_t lus[] = { { 1, { 0, 0 }, {0, 0 } }, { 2, { 0, 0 }, {0, 0 } } };
-    int fd1, fd2, fd3, fd4;
-    fd1 = open("/dev/gpiots0", O_RDONLY);
-    fd2 = open("/dev/gpiots1", O_RDONLY);
-    fd3 = open("/dev/gpiots2", O_RDONLY);
-    fd4 = open("/dev/gpiots3", O_RDONLY);
-    if (fd1 < 0) {
-        printf("open error\n");
-        exit(-1);
+    fifo_payload_t lus[LUSSEN];
+    for (int i = 0; i < LUSSEN; ++i) {
+        lus[i].lusid = i;
+        lus[i].ts_start = lus[i].ts_end = (struct timespec) { 0, 0 }; 
     }
-    int files[] = { fd1, fd2, fd3, fd4 };
+    int files[NGPIOS];
+    for (int i = 0; i < NGPIOS; ++i) {
+        char gpio[64];
+        snprintf(gpio, 64, "/dev/gpiots%d", i);
+        int fd = open(gpio, O_RDONLY); 
+        if (fd < 0) {
+            printf("%s open error %d\n", gpio, fd);
+            exit(-1);
+        }
+        files[i] = fd;
+    }
     int n;
     struct pollfd fds[4];
     for (int i = 0; i < 4; ++i) {
@@ -89,8 +97,7 @@ int main(int argc, char **argv) {
                 } else {
                     printf("lus %d: ***interrupts arrived out of order\n", lus[i].lusid);               
                 }
-                lus[i].ts_start = (struct timespec){ 0, 0 };
-                lus[i].ts_end = (struct timespec){ 0, 0 };
+                lus[i].ts_start = lus[i].ts_end = (struct timespec){ 0, 0 };
             }
            
         }
