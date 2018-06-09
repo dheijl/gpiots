@@ -55,13 +55,13 @@ int main(int argc, char **argv) {
         files[i] = fd;
     }
     int n;
-    struct pollfd fds[4];
-    for (int i = 0; i < 4; ++i) {
+    struct pollfd fds[NGPIOS];
+    for (int i = 0; i < NGPIOS; ++i) {
         fds[i].fd = files[i];
         fds[i].events = POLLPRI | POLLERR;
     }
     while (true) {
-        int rc = poll(fds, 4, 2000);
+        int rc = poll(fds, NGPIOS, 2000);
         if (rc < 0) { // error
             perror("poll failed");
             return -1;
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
             //printf("poll timeout\n");
             continue;
         }
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < NGPIOS; ++i) {
             if (fds[i].revents != 0) {
                 n = read(files[i], &ts, 1);
                 if (n == 1) {
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
                 }
            } 
         }
-        for (int i = 0 ; i < 2; ++i) {
+        for (int i = 0 ; i < LUSSEN; ++i) {
             if (lus[i].ts_end.tv_sec > 0) {
                 long usecs_start = lus[i].ts_start.tv_sec * 1000000 + (lus[i].ts_start.tv_nsec / 1000);
                 long usecs_end = lus[i].ts_end.tv_sec * 1000000 + (lus[i].ts_end.tv_nsec / 1000);
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
            
         }
     }
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < NGPIOS; ++i) {
         close(files[i]);
     }
     exit(0);
