@@ -77,6 +77,7 @@ int main(int argc, char **argv) {
                     //printf("%d  %ld %ld\n", i, ts[i].tv_sec, ts[i].tv_nsec);
                 } else {
                     printf("**************read failed for fd%d\n", i);
+                    continue;
                 }
                 int tsi = i / 2;
                 if ((i & 1) == 0) {
