@@ -39,7 +39,7 @@ gpio_fifo_t *gpio_fifo_create(int size) {
     f->head = 0;
     f->tail = 0;
     f->size = size + 1;
-    f->data = (struct timespec *)kmalloc((size + 1) * sizeof(struct timespec), GFP_KERNEL);
+    f->data = (struct timespec64 *)kmalloc((size + 1) * sizeof(struct timespec64), GFP_KERNEL);
     if (f->data == NULL) {
         printk(KERN_ERR "fifo_create: out of memory\n");
         return NULL;
@@ -58,9 +58,9 @@ void gpio_fifo_destroy(gpio_fifo_t *f) {
 }
 // This reads up to n timestamps from the FIFO
 // The number of timestamps actually read is returned
-int gpio_fifo_read(gpio_fifo_t *f, struct timespec *data, int ntimestamps) {
+int gpio_fifo_read(gpio_fifo_t *f, struct timespec64 *data, int ntimestamps) {
     int i;
-    struct timespec *p = data;
+    struct timespec64 *p = data;
     for (i = 0; i < ntimestamps; i++) {
         if (f->tail != f->head) {     // see if any data is available
             *p++ = f->data[f->tail];  // grab a timestamp from the buffer
@@ -77,9 +77,9 @@ int gpio_fifo_read(gpio_fifo_t *f, struct timespec *data, int ntimestamps) {
 // This writes up to n timestamps to the FIFO
 // If the head runs in to the tail, not all timestamps are written
 // The number of timestamps actually written is returned
-int gpio_fifo_write(gpio_fifo_t *f, const struct timespec *data, int ntimestamps) {
+int gpio_fifo_write(gpio_fifo_t *f, const struct timespec64 *data, int ntimestamps) {
     int i;
-    const struct timespec *p;
+    const struct timespec64 *p;
     p = data;
     for (i = 0; i < ntimestamps; i++) {
         // first check to see if there is space in the buffer

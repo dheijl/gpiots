@@ -37,11 +37,11 @@ SOFTWARE.
 
 int main(int argc, char **argv) {
 
-    struct timespec ts;
+    struct timespec64 ts;
     fifo_payload_t lus[LUSSEN];
     for (int i = 0; i < LUSSEN; ++i) {
         lus[i].lusid = i;
-        lus[i].ts_start = lus[i].ts_end = (struct timespec) { 0, 0 }; 
+        lus[i].ts_start = lus[i].ts_end = (struct timespec64) { 0, 0 }; 
     }
     int files[NGPIOS];
     for (int i = 0; i < NGPIOS; ++i) {
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
                 } else {
                     printf("lus %d: ***interrupts arrived out of order\n", lus[i].lusid);               
                 }
-                lus[i].ts_start = lus[i].ts_end = (struct timespec){ 0, 0 };
+                lus[i].ts_start = lus[i].ts_end = (struct timespec64){ 0, 0 };
             }
            
         }

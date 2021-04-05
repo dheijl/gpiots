@@ -137,18 +137,18 @@ static ssize_t gpio_ts_read(struct file *filp, char *buffer, size_t length, loff
     int nread;
     ssize_t lg;
     int err;
-    struct timespec *kbuffer;
+    struct timespec64 *kbuffer;
     unsigned long irqmsk;
 
     struct gpio_ts_devinfo *devinfo = filp->private_data;
-    kbuffer = kmalloc(length * sizeof(struct timespec), GFP_KERNEL);
+    kbuffer = kmalloc(length * sizeof(struct timespec64), GFP_KERNEL);
     if (kbuffer == NULL)
         return -ENOMEM;
     spin_lock_irqsave(&devinfo->spinlock, irqmsk);
     nread = gpio_fifo_read(devinfo->fifo, kbuffer, length);
     spin_unlock_irqrestore(&devinfo->spinlock, irqmsk);
     if (nread > 0) {
-        lg = nread * sizeof(struct timespec);
+        lg = nread * sizeof(struct timespec64);
         err = copy_to_user(buffer, kbuffer, lg);
         if (err != 0)
             return -EFAULT;
@@ -194,7 +194,7 @@ static unsigned int gpio_ts_poll(struct file *filp, struct poll_table_struct *po
 //  
 static irqreturn_t gpio_ts_handler(int irq, void *arg) {
 
-    struct timespec timestamp;
+    struct timespec64 timestamp;
     struct gpio_ts_devinfo *devinfo;
     int nwritten;
 
@@ -203,7 +203,7 @@ static irqreturn_t gpio_ts_handler(int irq, void *arg) {
     }
 
     // first of all get the timestamp
-    getnstimeofday(&timestamp);
+    ktime_get_real_ts64(&timestamp);
 
     // get the device info structure for this gpio from the file pointer
     // note that it's just a pointer to devtable[gpio_index]
