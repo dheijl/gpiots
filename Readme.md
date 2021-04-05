@@ -7,7 +7,7 @@ Reading the GPIO interrupt timestamps is somewhat peculiar:
 
 - read() is non-blocking: if no interrupts have occurred you simply get a zero return
 - by default you do not read characters, you read timestamps: the length parameter in read() specifies the number of timestamps you want to read. So your buffer size must be a multiple of sizeof(timespec64), which is normally 12 bytes on 32-bit architecture, and 16 bytes on 64 bit architectures.  
-When you us the `safemode=1` parameter on module installation the length parameter in read() specifies the number of bytes to read. In this mode the length parameter must be a multiple of sizeof(timespec64). The safe mode makes it possible to access the kernel module interface from environments like Python.
+When you use the `safemode=1` parameter on module installation the length parameter in read() specifies the number of bytes to read. In this mode the length parameter must be a multiple of sizeof(timespec64). The safe mode makes it possible to access the kernel module interface from environments like Python.
 - by default read() returns the number of timespec structs read, not the number of bytes.  
 When `safemode` is active the number of bytes read is returned.
 - you should use poll() before you try to read() if you want to avoid reading in a loop until GPIO interrupts arrive
