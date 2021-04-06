@@ -83,8 +83,11 @@ static irqreturn_t gpio_ts_handler(int irq, void *devt);
 static int gpio_ts_table[GPIO_TS_NB_ENTRIES_MAX];
 // the number of gpio pins requested
 static int gpio_ts_nb_gpios;
+// whether the module should run in safe mode (requested read length matches buffer size)
+static int use_safe_mode = 0; // defaults to off for backwards compatibility 
 // the module parameters definition
 module_param_array_named(gpios, gpio_ts_table, int, &gpio_ts_nb_gpios, 0644);
+module_param_named(safemode, use_safe_mode, int, 0644);
 
 // ------------------ Driver private data type ------------------------------
 
@@ -137,24 +140,40 @@ static ssize_t gpio_ts_read(struct file *filp, char *buffer, size_t length, loff
     int nread;
     ssize_t lg;
     int err;
-    struct timespec *kbuffer;
+    struct timespec64 *kbuffer;
     unsigned long irqmsk;
 
     struct gpio_ts_devinfo *devinfo = filp->private_data;
-    kbuffer = kmalloc(length * sizeof(struct timespec), GFP_KERNEL);
+    if (!use_safe_mode) {
+        kbuffer = kmalloc(length * sizeof(struct timespec64), GFP_KERNEL);
+    } else {
+        if (length % sizeof(struct timespec64) != 0)
+            return -EFAULT;
+        kbuffer = kmalloc(length, GFP_KERNEL);
+    }
     if (kbuffer == NULL)
         return -ENOMEM;
+
     spin_lock_irqsave(&devinfo->spinlock, irqmsk);
-    nread = gpio_fifo_read(devinfo->fifo, kbuffer, length);
+    if (!use_safe_mode)
+        nread = gpio_fifo_read(devinfo->fifo, kbuffer, length);
+    else
+        nread = gpio_fifo_read(devinfo->fifo, kbuffer, length / sizeof(struct timespec64));
     spin_unlock_irqrestore(&devinfo->spinlock, irqmsk);
+
     if (nread > 0) {
-        lg = nread * sizeof(struct timespec);
+        lg = nread * sizeof(struct timespec64);
         err = copy_to_user(buffer, kbuffer, lg);
         if (err != 0)
             return -EFAULT;
     }
+
     kfree(kbuffer);
-    return nread;
+
+    if (!use_safe_mode) 
+        return nread;
+    else
+        return lg;
 }
 
 //
@@ -194,7 +213,7 @@ static unsigned int gpio_ts_poll(struct file *filp, struct poll_table_struct *po
 //  
 static irqreturn_t gpio_ts_handler(int irq, void *arg) {
 
-    struct timespec timestamp;
+    struct timespec64 timestamp;
     struct gpio_ts_devinfo *devinfo;
     int nwritten;
 
@@ -203,7 +222,7 @@ static irqreturn_t gpio_ts_handler(int irq, void *arg) {
     }
 
     // first of all get the timestamp
-    getnstimeofday(&timestamp);
+    ktime_get_real_ts64(&timestamp);
 
     // get the device info structure for this gpio from the file pointer
     // note that it's just a pointer to devtable[gpio_index]

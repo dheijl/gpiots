@@ -17,7 +17,8 @@ else
 all: modules test
 
 modules:
-	${MAKE} -C ${KERNEL_DIR} SUBDIRS=${MODULE_DIR}  modules 
+#	${MAKE} -C ${KERNEL_DIR} SUBDIRS=${MODULE_DIR}  modules 
+	${MAKE} -C ${KERNEL_DIR} M=${MODULE_DIR}  modules 
 
 clean:
 	rm -f *.o *.ko *.mod.c .*.o .*.ko .*.mod.c .*.cmd *~ test
