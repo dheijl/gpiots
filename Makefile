@@ -6,7 +6,8 @@ ifneq (${KERNELRELEASE},)
 else
 
 	MODULE_DIR := $(shell pwd)
-	KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
+	KERNEL_VERSION := $(shell uname -r)
+	KERNEL_DIR ?= /lib/modules/${KERNEL_VERSION}/build
 
 #	KERNEL_DIR = /usr/local/src/linux-rpi-3.6.11
 #	ARCH       = arm
@@ -27,5 +28,10 @@ clean:
 
 test: gpiots_test.c fifo.c
 	$(CC) -o test gpiots_test.c fifo.c -lm
+
+module-install: modules
+	mkdir -p /lib/modules/${KERNEL_VERSION}/extra
+	cp gpiots.ko /lib/modules/${KERNEL_VERSION}/extra/
+	depmod
 
 endif
