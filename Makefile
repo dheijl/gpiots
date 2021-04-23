@@ -9,17 +9,14 @@ else
 	KERNEL_VERSION := $(shell uname -r)
 	KERNEL_DIR ?= /lib/modules/${KERNEL_VERSION}/build
 
-#	KERNEL_DIR = /usr/local/src/linux-rpi-3.6.11
-#	ARCH       = arm
-#	CROSS_COMPILE = /usr/local/cross/rpi/bin/arm-linux-
-
+	VERSIONTAG := $(shell git describe --tags --always)
+	KCPPFLAGS := "-DVERSIONTAG=\\\"${VERSIONTAG}\\\""
 	CFLAGS := -std=gnu99 -Wall -g 
 
 all: modules test
 
 modules:
-#	${MAKE} -C ${KERNEL_DIR} SUBDIRS=${MODULE_DIR}  modules 
-	${MAKE} -C ${KERNEL_DIR} M=${MODULE_DIR}  modules 
+	KCPPFLAGS=${KCPPFLAGS} ${MAKE} -C ${KERNEL_DIR} M=${MODULE_DIR}  modules 
 
 clean:
 	rm -f *.o *.ko *.mod.c .*.o .*.ko .*.mod.c .*.cmd *~ test
