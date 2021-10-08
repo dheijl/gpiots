@@ -407,5 +407,6 @@ void __exit gpio_ts_exit(void) {
 module_init(gpio_ts_init);
 module_exit(gpio_ts_exit);
 
+MODULE_VERSION(VERSIONTAG);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("danny.heijl@telenet.be");
